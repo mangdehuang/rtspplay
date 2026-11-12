@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RTSP Player - 基础示例</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    .description {
+      color: #666;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    .video-container {
+      position: relative;
+      width: 100%;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    video {
+      width: 100%;
+      display: block;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    button.secondary {
+      background: #6c757d;
+    }
+
+    button.secondary:hover {
+      background: #545b62;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+
+    .status {
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .status.info {
+      background: #e7f3ff;
+      color: #004085;
+      border-left: 4px solid #007bff;
+    }
+
+    .status.error {
+      background: #ffe7e7;
+      color: #721c24;
+      border-left: 4px solid #dc3545;
+    }
+
+    .status.success {
+      background: #e7ffe7;
+      color: #155724;
+      border-left: 4px solid #28a745;
+    }
+
+    .volume-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      max-width: 200px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎥 RTSP Player 基础示例</h1>
+    <p class="description">
+      本示例演示如何使用 @rtspplay/player 播放 RTSP 视频流。请先将 RTSP 流转换为 HLS 格式，然后输入 HLS 播放列表 URL。
+    </p>
+
+    <div class="input-group">
+      <label for="streamUrl">HLS 播放列表 URL</label>
+      <input
+        type="text"
+        id="streamUrl"
+        placeholder="https://your-server.com/stream.m3u8"
+        value="https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+      >
+    </div>
+
+    <div class="controls">
+      <button id="initBtn">初始化播放器</button>
+      <button id="playBtn" disabled>播放</button>
+      <button id="pauseBtn" disabled>暂停</button>
+      <button id="muteBtn" class="secondary" disabled>静音</button>
+      <button id="fullscreenBtn" class="secondary" disabled>全屏</button>
+      <button id="destroyBtn" class="secondary" disabled>销毁</button>
+    </div>
+
+    <div class="volume-control">
+      <label>音量:</label>
+      <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.5" disabled>
+      <span id="volumeValue">50%</span>
+    </div>
+
+    <div id="status" class="status info" style="display: none;"></div>
+
+    <div class="video-container">
+      <video id="video" controls></video>
+    </div>
+
+    <div class="description">
+      <h3>功能说明：</h3>
+      <ul style="margin-left: 20px; margin-top: 10px; line-height: 1.8;">
+        <li>输入 HLS 播放列表 URL 后点击"初始化播放器"</li>
+        <li>使用控制按钮进行播放、暂停、静音、全屏操作</li>
+        <li>拖动音量滑块调节音量</li>
+        <li>支持自动错误恢复和重连</li>
+      </ul>
+    </div>
+  </div>
+
+  <script type="module">
+    import RtspPlayer from '../dist/index.esm.js'
+
+    let player = null
+    const video = document.getElementById('video')
+    const streamUrlInput = document.getElementById('streamUrl')
+    const initBtn = document.getElementById('initBtn')
+    const playBtn = document.getElementById('playBtn')
+    const pauseBtn = document.getElementById('pauseBtn')
+    const muteBtn = document.getElementById('muteBtn')
+    const fullscreenBtn = document.getElementById('fullscreenBtn')
+    const destroyBtn = document.getElementById('destroyBtn')
+    const volumeSlider = document.getElementById('volumeSlider')
+    const volumeValue = document.getElementById('volumeValue')
+    const status = document.getElementById('status')
+
+    function showStatus(message, type = 'info') {
+      status.textContent = message
+      status.className = `status ${type}`
+      status.style.display = 'block'
+    }
+
+    function hideStatus() {
+      status.style.display = 'none'
+    }
+
+    function updateButtons(enabled) {
+      playBtn.disabled = !enabled
+      pauseBtn.disabled = !enabled
+      muteBtn.disabled = !enabled
+      fullscreenBtn.disabled = !enabled
+      destroyBtn.disabled = !enabled
+      volumeSlider.disabled = !enabled
+    }
+
+    initBtn.addEventListener('click', () => {
+      const url = streamUrlInput.value.trim()
+      if (!url) {
+        showStatus('请输入有效的 HLS 播放列表 URL', 'error')
+        return
+      }
+
+      if (player) {
+        player.destroy()
+      }
+
+      showStatus('正在初始化播放器...', 'info')
+
+      try {
+        player = new RtspPlayer({
+          playlistUrl: url,
+          videoElement: video,
+          autoPlay: false,
+          muted: false,
+
+          onReady: () => {
+            showStatus('播放器准备就绪', 'success')
+            updateButtons(true)
+            initBtn.disabled = true
+          },
+
+          onPlaying: () => {
+            showStatus('正在播放', 'success')
+            updateMuteButton()
+          },
+
+          onPaused: () => {
+            showStatus('播放已暂停', 'info')
+          },
+
+          onError: (error) => {
+            showStatus(`播放错误: ${error.message}`, 'error')
+            console.error('Player error:', error)
+          },
+
+          onRecovering: (message) => {
+            showStatus(message, 'info')
+          }
+        })
+      } catch (error) {
+        showStatus(`初始化失败: ${error.message}`, 'error')
+        console.error('Init error:', error)
+      }
+    })
+
+    playBtn.addEventListener('click', () => {
+      if (player) {
+        player.play().catch(err => {
+          showStatus(`播放失败: ${err.message}`, 'error')
+        })
+      }
+    })
+
+    pauseBtn.addEventListener('click', () => {
+      if (player) {
+        player.pause()
+      }
+    })
+
+    function updateMuteButton() {
+      if (player) {
+        muteBtn.textContent = player.isMuted() ? '取消静音' : '静音'
+      }
+    }
+
+    muteBtn.addEventListener('click', () => {
+      if (player) {
+        player.toggleMuted()
+        updateMuteButton()
+      }
+    })
+
+    fullscreenBtn.addEventListener('click', () => {
+      if (player) {
+        player.toggleFullscreen().catch(err => {
+          showStatus(`全屏操作失败: ${err.message}`, 'error')
+        })
+      }
+    })
+
+    destroyBtn.addEventListener('click', () => {
+      if (player) {
+        player.destroy()
+        player = null
+        updateButtons(false)
+        initBtn.disabled = false
+        hideStatus()
+      }
+    })
+
+    volumeSlider.addEventListener('input', (e) => {
+      const volume = parseFloat(e.target.value)
+      if (player) {
+        player.setVolume(volume)
+      }
+      volumeValue.textContent = `${Math.round(volume * 100)}%`
+    })
+  </script>
+</body>
+</html>
