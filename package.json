@@ -1,53 +1,27 @@
 {
-  "name": "rtspplay",
+  "name": "rtspplay-monorepo",
   "version": "1.0.0",
-  "description": "基于 HLS.js 的 RTSP 视频流播放器，支持实时视频流播放、全屏控制和音频控制",
-  "type": "module",
-  "main": "dist/index.js",
-  "module": "dist/index.esm.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist",
-    "src",
-    "README.md",
-    "LICENSE"
-  ],
+  "private": true,
+  "description": "RTSP 视频流播放器系列包",
   "scripts": {
-    "build": "rollup -c",
-    "dev": "rollup -c -w",
-    "prepublishOnly": "npm run build"
+    "build:rtspplay": "cd packages/rtspplay && npm run build",
+    "build:live": "cd packages/rtspplay-live && npm install && npm run build",
+    "build:server": "cd packages/rtspplay-server && npm install && npm run build",
+    "build:all": "npm run build:rtspplay && npm run build:live && npm run build:server"
   },
   "keywords": [
     "rtsp",
-    "hls",
     "video",
     "player",
-    "stream",
-    "live",
-    "real-time",
-    "监控",
-    "摄像头"
+    "streaming",
+    "hls",
+    "jsmpeg",
+    "mse"
   ],
   "author": "mangdehuang",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/mangdehuang/rtspplay.git"
-  },
-  "bugs": {
-    "url": "https://github.com/mangdehuang/rtspplay/issues"
-  },
-  "homepage": "https://github.com/mangdehuang/rtspplay#readme",
-  "peerDependencies": {
-    "hls.js": "^1.7.0"
-  },
-  "devDependencies": {
-    "@rollup/plugin-typescript": "^12.3.1",
-    "@types/node": "^20.0.0",
-    "hls.js": "^1.7.4",
-    "rollup": "^4.0.0",
-    "rollup-plugin-typescript2": "^0.36.0",
-    "tslib": "^2.9.1",
-    "typescript": "^5.0.0"
+    "url": "git+https://github.com/mangdehuang/rtspplay.git"
   }
 }

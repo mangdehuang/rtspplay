@@ -1,0 +1,51 @@
+{
+  "name": "rtspplay-server",
+  "version": "1.0.0",
+  "description": "极简 RTSP 转流服务，支持 JSMpeg 和 MSE 两种输出格式，配合 rtspplay-live 使用",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "rtspplay-server": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "rtsp",
+    "hls",
+    "video",
+    "streaming",
+    "server",
+    "ffmpeg",
+    "websocket"
+  ],
+  "author": "mangdehuang",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mangdehuang/rtspplay.git",
+    "directory": "packages/rtspplay-server"
+  },
+  "bugs": {
+    "url": "https://github.com/mangdehuang/rtspplay/issues"
+  },
+  "homepage": "https://github.com/mangdehuang/rtspplay/tree/main/packages/rtspplay-server#readme",
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.3.0",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "@types/node": "^20.0.0",
+    "@types/ws": "^8.5.13",
+    "rollup": "^4.0.0",
+    "tslib": "^2.8.1",
+    "typescript": "^5.0.0"
+  }
+}
